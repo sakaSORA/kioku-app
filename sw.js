@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kioku-no-kanata-v1';
+﻿const CACHE_NAME = 'kioku-no-kanata-v2';
 const urlsToCache = [
   './',
   './memo.html',
