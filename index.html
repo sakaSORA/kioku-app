@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>勤務別帰宅前チェックアプリ</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="帰宅チェック">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="theme-color" content="#007bff">
+
+    <style>
+        /* ======================================= */
+        /* CSS (スマートフォン特化デザイン) */
+        /* ======================================= */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            width: 100%; 
+            margin: 0;
+            padding: 10px;
+            padding-top: calc(10px + env(safe-area-inset-top)); /* ノッチ対策 */
+            padding-bottom: calc(20px + env(safe-area-inset-bottom));
+            box-sizing: border-box;
+            background-color: #f4f7f6;
+            color: #333;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        h1 {
+            text-align: center;
+            color: #007bff;
+            margin: 10px 0 20px 0;
+            font-size: 1.5em;
+        }
+
+        #header-selection {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            gap: 8px;
+        }
+
+        #header-selection button {
+            padding: 10px 5px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            background-color: #e9ecef;
+            color: #495057;
+            transition: all 0.2s;
+            flex-grow: 1;
+            font-size: 1.1em;
+            line-height: 1.2;
+            height: 60px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        #header-selection button.active {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        #checklist-container {
+            padding: 0;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 12px;
+            background-color: white;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: background-color 0.2s;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .checklist-item label {
+            flex-grow: 1; 
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 1.1em;
+            position: relative;
+            min-height: 30px;
+        }
+        
+        .checklist-item label::before {
+            content: '';
+            width: 26px;
+            height: 26px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            margin-right: 15px;
+            display: inline-block;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            background-color: #fff;
+        }
+
+        .checklist-item input[type="checkbox"]:checked + label::before {
+            background-color: #28a745;
+            border-color: #28a745;
+            content: '✓';
+            color: white;
+            text-align: center;
+            line-height: 26px;
+            font-size: 1.2em;
+        }
+
+        .checklist-item.checked {
+            background-color: #f8f9fa; 
+        }
+
+        .checklist-item.checked label {
+            color: #adb5bd;
+            text-decoration: line-through;
+        }
+
+        .delete-button {
+            margin-left: 10px;
+            background: #fff5f5;
+            border: none;
+            color: #dc3545;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+        
+        .checklist-item.fixed .delete-button {
+            display: none;
+        }
+        
+        #add-item-area {
+            display: flex;
+            margin-top: 25px;
+            gap: 10px;
+        }
+
+        #new-item-input {
+            flex-grow: 1;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            font-size: 1em;
+            outline: none;
+            user-select: text;
+        }
+
+        #add-item-button {
+            padding: 0 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        #reset-checks-button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 15px;
+            background-color: #ffc107;
+            color: #333;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <h1>帰宅前チェック</h1>
+
+    <div id="header-selection">
+        <button data-list="A-shift" class="active">A<br>勤務</button>
+        <button data-list="day-shift">日<br>勤</button>
+        <button data-list="night-shift">夜<br>勤</button>
+    </div>
+
+    <div id="checklist-container"></div>
+
+    <div id="add-item-area">
+        <input type="text" id="new-item-input" placeholder="項目を追加...">
+        <button id="add-item-button">追加</button>
+    </div> 
+    
+    <button id="reset-checks-button">リセット</button>
+
+    <script>
+        // --- Service Worker の登録 ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW registered'))
+                    .catch(err => console.log('SW registration failed', err));
+            });
+        }
+
+        // --- アプリケーションロジック ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const FIXED_LIST_KEY_PREFIX = 'combined-checklist-';
+            const fixedItemsList = {
+                'A-shift': [
+                    'エレベーターホール', '庶務室', 'メールセンター 電気', 'メールセンター エアコン', 
+                    '荷捌場 シャッター', 'セキュリティの状態', '警備日誌', '各簿冊の処置 押印/赤線',
+                    '財布', '携帯電話', '家の鍵', '車の鍵', '冷蔵庫内', 'マグカップ'
+                ],
+                'day-shift': [
+                    '財布', '携帯電話', '家の鍵', '車の鍵', '冷蔵庫内', 'マグカップ'
+                ],
+                'night-shift': [
+                    'セキュリティの解除', '清掃', '庶務の鍵開け', 'エレベーターホールの準備',
+                    '財布', '携帯電話', '家の鍵', '車の鍵', '冷蔵庫内', 'マグカップ'
+                ]
+            };
+            
+            let activeListKey = 'A-shift'; 
+            const container = document.getElementById('checklist-container');
+            const headerButtons = document.querySelectorAll('#header-selection button');
+            const addItemButton = document.getElementById('add-item-button');
+            const newItemInput = document.getElementById('new-item-input');
+            const resetChecksButton = document.getElementById('reset-checks-button');
+
+            function getList(key) {
+                const localStorageKey = FIXED_LIST_KEY_PREFIX + key;
+                const storedList = localStorage.getItem(localStorageKey);
+                let fixedItems = fixedItemsList[key].map(text => ({ 
+                    text: text, 
+                    checked: false, 
+                    isFixed: true,
+                    id: `fixed-${key}-${text.replace(/\s/g, '')}` 
+                }));
+
+                if (storedList) {
+                    try {
+                        const savedItems = JSON.parse(storedList);
+                        const customItems = savedItems.filter(item => !item.isFixed);
+                        const savedFixedItems = savedItems.filter(item => item.isFixed);
+                        fixedItems = fixedItems.map(fixedItem => {
+                            const savedMatch = savedFixedItems.find(saved => saved.text === fixedItem.text);
+                            if (savedMatch) fixedItem.checked = savedMatch.checked;
+                            return fixedItem;
+                        });
+                        return [...fixedItems, ...customItems];
+                    } catch (e) {
+                        console.error("Parse failed", e);
+                    }
+                }
+                return fixedItems;
+            }
+
+            function saveList(key, list) {
+                 localStorage.setItem(FIXED_LIST_KEY_PREFIX + key, JSON.stringify(list));
+            }
+
+            function renderChecklist(listKey) {
+                container.innerHTML = ''; 
+                const combinedList = getList(listKey);
+
+                combinedList.forEach((item, index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = `checklist-item ${item.checked ? 'checked' : ''} ${item.isFixed ? 'fixed' : 'custom'}`;
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = item.checked;
+                    checkbox.id = `item-${listKey}-${index}`; 
+                    checkbox.dataset.index = index; 
+                    
+                    const label = document.createElement('label');
+                    label.htmlFor = `item-${listKey}-${index}`;
+                    label.textContent = item.text;
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'delete-button';
+                    deleteButton.textContent = '×';
+                    deleteButton.dataset.index = index; 
+                    deleteButton.dataset.action = 'delete';
+
+                    itemDiv.appendChild(checkbox);
+                    itemDiv.appendChild(label);
+                    itemDiv.appendChild(deleteButton);
+                    container.appendChild(itemDiv);
+                });
+                
+                const allChecked = combinedList.length > 0 && combinedList.every(item => item.checked);
+                if (allChecked) {
+                    setTimeout(() => alert('全項目チェック完了！お疲れ様でした。'), 50);
+                }
+            }
+
+            function toggleCheck(index) {
+                const combinedList = getList(activeListKey);
+                if (index >= 0 && index < combinedList.length) {
+                    combinedList[index].checked = !combinedList[index].checked;
+                    saveList(activeListKey, combinedList);
+                    renderChecklist(activeListKey); 
+                }
+            }
+
+            function addItem() {
+                const text = newItemInput.value.trim();
+                if (text) {
+                    const combinedList = getList(activeListKey);
+                    combinedList.push({ text: text, checked: false, isFixed: false, id: `custom-${Date.now()}` });
+                    saveList(activeListKey, combinedList);
+                    newItemInput.value = ''; 
+                    renderChecklist(activeListKey);
+                }
+            }
+
+            function deleteItem(index) {
+                const combinedList = getList(activeListKey);
+                if (combinedList[index] && !combinedList[index].isFixed) {
+                    combinedList.splice(index, 1);
+                    saveList(activeListKey, combinedList);
+                    renderChecklist(activeListKey);
+                }
+            }
+            
+            function resetAllChecks() {
+                if (!confirm('全てのチェックをリセットしますか？')) return;
+                const combinedList = getList(activeListKey);
+                combinedList.forEach(item => item.checked = false);
+                saveList(activeListKey, combinedList);
+                renderChecklist(activeListKey);
+            }
+
+            container.addEventListener('click', (e) => {
+                const itemDiv = e.target.closest('.checklist-item');
+                if (!itemDiv) return;
+                const checkbox = itemDiv.querySelector('input[type="checkbox"]');
+                const deleteButton = e.target.closest('.delete-button');
+                const index = parseInt(checkbox.dataset.index);
+
+                if (deleteButton) {
+                    e.preventDefault();
+                    deleteItem(index);
+                    return;
+                }
+                
+                if (e.target.tagName === 'LABEL' || e.target === itemDiv || e.target.tagName === 'DIV') {
+                    toggleCheck(index);
+                    e.preventDefault();
+                }
+            });
+
+            headerButtons.forEach(button => {
+                button.onclick = (e) => {
+                    activeListKey = e.currentTarget.dataset.list;
+                    headerButtons.forEach(btn => btn.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                    renderChecklist(activeListKey);
+                };
+            });
+
+            addItemButton.onclick = addItem;
+            newItemInput.onkeydown = (e) => { if (e.key === 'Enter') addItem(); };
+            resetChecksButton.onclick = resetAllChecks;
+            renderChecklist(activeListKey);
+        });
+    </script>
+</body>
+</html>
