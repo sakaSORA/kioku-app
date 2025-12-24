@@ -3,34 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>記憶の彼方 - Standalone Professional Edition</title>
+    <title>記憶の彼方 - GitHub Pages Edition</title>
+    <link rel="manifest" href="manifest.json">
     <style>
         :root {
-            --primary-color: #007AFF;
-            --bg-overlay: rgba(255, 255, 255, 0.85);
-            --border-color: #333;
+            --primary-color: #A3D8FF; 
+            --accent-color: #FFB3BA;  
+            --edit-color: #BAFFC9;    
+            --copy-color: #FFFFBA;    
+            --bg-overlay: rgba(255, 255, 255, 0.9);
+            --border-color: #888;
             --date-color: #666;
             --border-thick: 2px;
+            /* カテゴリ別パステルカラー */
+            --tab-1: #FFE4E6; --tab-2: #FFF1E0; --tab-3: #FEFFD6;
+            --tab-4: #E6FFED; --tab-5: #E8F4FF; --tab-6: #F3E8FF;
         }
 
-        /* レイアウト基盤 */
         html, body { height: 100%; margin: 0; padding: 0; }
         body {
-            font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
-            background-size: cover;
-            background-position: center 50%;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
-            background-color: #f0f0f2;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, "Helvetica Neue", "Hiragino Kaku Gothic ProN", sans-serif;
+            background-size: cover; background-position: center 50%;
+            background-attachment: fixed; background-color: #f8f9fa;
+            overflow-x: hidden; -webkit-tap-highlight-color: transparent;
             min-height: 100vh;
         }
 
-        /* 固定ヘッダー（タブを含む） */
+        /* 固定ヘッダー */
         .fixed-top {
             position: fixed; top: 0; left: 0; right: 0;
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(15px);
             z-index: 1000; border-bottom: var(--border-thick) solid var(--border-color);
         }
         
@@ -38,94 +40,98 @@
             display: flex; align-items: center; justify-content: space-between;
             padding: 8px 12px; height: 44px;
         }
-        .app-title { font-size: 18px; font-weight: 800; color: #333; margin: 0; }
+        .app-title { font-size: 19px; font-weight: 900; color: #333; margin: 0; }
         .header-icons { display: flex; gap: 8px; }
         .icon-btn { 
             background: white; border: var(--border-thick) solid var(--border-color);
-            border-radius: 8px; width: 38px; height: 38px;
+            border-radius: 12px; width: 38px; height: 38px;
             display: flex; align-items: center; justify-content: center;
             font-size: 18px; cursor: pointer; box-shadow: 2px 2px 0px var(--border-color);
         }
-        .icon-btn:active { transform: translate(1px, 1px); box-shadow: none; }
 
-        /* タブエリア */
-        .tab-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 4px 12px 8px; }
+        /* タブエリア（フォントサイズ拡大・初期色付け） */
+        .tab-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 6px 12px 10px; }
         .tab {
-            padding: 8px 2px; border-radius: 8px; font-size: 0.7rem; 
+            padding: 10px 2px; border-radius: 12px; font-size: 0.95rem; 
             border: var(--border-thick) solid var(--border-color);
-            text-align: center; font-weight: 700; cursor: pointer; background: white;
+            text-align: center; font-weight: 800; cursor: pointer;
             box-shadow: 2px 2px 0px var(--border-color);
+            transition: all 0.2s ease;
+            display: flex; align-items: center; justify-content: center;
         }
-        .tab.active { background: var(--primary-color); color: white; transform: translateY(1px); box-shadow: none; }
+        .tab:nth-child(1) { background: var(--tab-1); }
+        .tab:nth-child(2) { background: var(--tab-2); }
+        .tab:nth-child(3) { background: var(--tab-3); }
+        .tab:nth-child(4) { background: var(--tab-4); }
+        .tab:nth-child(5) { background: var(--tab-5); }
+        .tab:nth-child(6) { background: var(--tab-6); }
 
-        .search-container { padding: 0 12px 10px; }
+        .tab.active { 
+            transform: translateY(-3px);
+            box-shadow: 0px 4px 0px var(--border-color);
+            filter: saturate(1.5) brightness(0.95);
+        }
+
+        .search-container { padding: 0 12px 12px; }
         #searchInput { 
-            width: 100%; padding: 8px 12px; border-radius: 10px; 
+            width: 100%; padding: 10px 15px; border-radius: 20px; 
             border: var(--border-thick) solid var(--border-color); outline: none; box-sizing: border-box;
         }
 
-        /* メモアイテム（1行表示の徹底） */
-        #memoList { padding-bottom: 150px; }
+        /* メモアイテム */
+        #memoList { padding-bottom: 160px; }
         .memo-item {
             display: flex; align-items: center; margin: 10px 12px; padding: 12px;
             border: var(--border-thick) solid var(--border-color);
-            border-radius: 12px; gap: 10px; background: var(--bg-overlay);
-            box-shadow: 3px 3px 0px rgba(0,0,0,0.1); backdrop-filter: blur(5px);
+            border-radius: 16px; gap: 10px; background: var(--bg-overlay);
+            box-shadow: 3px 3px 0px rgba(0,0,0,0.08); backdrop-filter: blur(5px);
         }
         .memo-item.dragging { opacity: 0.4; }
-        .drag-handle { cursor: grab; color: #ccc; font-size: 20px; display: none; }
+        .drag-handle { cursor: grab; color: #888; font-size: 20px; display: none; padding-right: 5px; }
         .memo-item.sort-mode .drag-handle { display: block; }
 
-        .date-text { font-size: 0.6rem; color: var(--date-color); min-width: 55px; flex-shrink: 0; font-weight: 600; text-align: center; }
-        
-        .memo-body { 
-            flex: 1; font-size: 0.95rem; color: #111; outline: none; 
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; 
-            min-width: 0;
-        }
+        .date-text { font-size: 0.65rem; color: var(--date-color); min-width: 55px; flex-shrink: 0; font-weight: 700; text-align: center; }
+        .memo-body { flex: 1; font-size: 0.95rem; color: #222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; outline: none; }
 
-        /* 編集時のスタイル */
         .memo-item.editing { flex-wrap: wrap; background: #fff; }
         .memo-item.editing .memo-body { 
             white-space: pre-wrap; flex-basis: 100%; margin: 10px 0; padding: 10px;
-            background: #f9f9f9; border-radius: 8px; border: 1px dashed #999; 
+            background: #f9f9f9; border-radius: 10px; border: 1px dashed #999; 
             overflow: visible; max-height: 300px; overflow-y: auto;
         }
 
         .memo-controls { display: flex; gap: 6px; flex-shrink: 0; }
         .action-btn { 
-            border: 1px solid var(--border-color); background: white; font-size: 0.7rem; 
-            font-weight: bold; padding: 6px 10px; border-radius: 6px; cursor: pointer;
+            border: var(--border-thick) solid var(--border-color); background: white; font-size: 0.75rem; 
+            font-weight: 800; padding: 6px 10px; border-radius: 10px; cursor: pointer;
+            box-shadow: 1px 1px 0px var(--border-color);
         }
+        .btn-copy { background: var(--copy-color); }
+        .btn-edit { background: var(--edit-color); }
+        .btn-delete { background: var(--accent-color); color: #333; }
 
-        /* 入力エリア（セーフエリア対応） */
+        /* 入力エリア（右端の縦線問題を修正） */
         .input-container {
             position: fixed; bottom: 0; left: 0; right: 0;
-            background: rgba(255, 255, 255, 0.95); padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-            display: flex; gap: 8px; border-top: var(--border-thick) solid var(--border-color); z-index: 1000;
+            background: rgba(255, 255, 255, 0.98); padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+            display: flex; gap: 10px; border-top: var(--border-thick) solid var(--border-color); z-index: 1000;
         }
         #memoInput { 
-            flex: 1; padding: 10px; border-radius: 12px; border: var(--border-thick) solid var(--border-color);
-            font-size: 16px; outline: none; resize: none; max-height: 100px;
+            flex: 1; padding: 12px 18px; border-radius: 20px; border: var(--border-thick) solid var(--border-color);
+            font-size: 16px; outline: none; resize: none; max-height: 100px; background: #fff;
+            overflow: hidden; /* スクロールバー起因の縦線を削除 */
+            box-shadow: none; 
+            display: block; width: 100%;
         }
         .add-btn { 
-            background: #333; color: white; border: none; padding: 0 20px; 
-            border-radius: 12px; font-weight: bold; cursor: pointer;
+            background: var(--primary-color); color: #333; border: var(--border-thick) solid var(--border-color); 
+            padding: 0 24px; border-radius: 20px; font-weight: 900; cursor: pointer;
+            box-shadow: 3px 3px 0px var(--border-color); flex-shrink: 0;
         }
 
-        /* モーダル表示 */
-        .modal { 
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px);
-        }
-        .modal-content { 
-            background: white; width: 85%; max-width: 320px; border: var(--border-thick) solid var(--border-color); 
-            border-radius: 20px; padding: 20px; box-shadow: 6px 6px 0px rgba(0,0,0,0.2); text-align: center; 
-        }
-        .modal-btn { 
-            width: 100%; margin-bottom: 10px; padding: 12px; border-radius: 10px; 
-            border: var(--border-thick) solid var(--border-color); font-weight: bold; cursor: pointer; background: white;
-        }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-content { background: white; width: 85%; max-width: 320px; border: var(--border-thick) solid var(--border-color); border-radius: 25px; padding: 25px; text-align: center; }
+        .modal-btn { width: 100%; margin-bottom: 12px; padding: 12px; border-radius: 15px; border: var(--border-thick) solid var(--border-color); font-weight: bold; cursor: pointer; background: white; box-shadow: 2px 2px 0px var(--border-color); }
     </style>
 </head>
 <body>
@@ -138,8 +144,6 @@
             <button class="icon-btn" onclick="openModal('dataModal')" title="データ管理">💾</button>
             <button class="icon-btn" onclick="openModal('bgModal')" title="背景管理">🖼️</button>
         </div>
-        <input type="file" id="bgPicker" accept="image/*" style="display:none">
-        <input type="file" id="importPicker" accept=".txt,.json" style="display:none">
     </div>
     <div class="tab-grid" id="tabList"></div>
     <div class="search-container">
@@ -160,18 +164,20 @@
         <button class="modal-btn" onclick="triggerBgPicker()">📷 画像を選択</button>
         <button class="modal-btn" onclick="adjustBgOffset()">↕️ 位置を調整</button>
         <button class="modal-btn" onclick="clearBg()">🗑️ 背景を削除</button>
-        <button class="modal-btn" style="background:#eee" onclick="closeModal('bgModal')">キャンセル</button>
+        <button class="modal-btn" style="background:#eee" onclick="closeModal('bgModal')">戻る</button>
     </div>
 </div>
-
 <div id="dataModal" class="modal">
     <div class="modal-content">
         <h3>💾 データ管理</h3>
         <button class="modal-btn" onclick="exportData()">📤 TXTで保存</button>
         <button class="modal-btn" onclick="triggerImport()">📥 ファイルから復元</button>
-        <button class="modal-btn" style="background:#eee" onclick="closeModal('dataModal')">キャンセル</button>
+        <button class="modal-btn" style="background:#eee" onclick="closeModal('dataModal')">戻る</button>
     </div>
 </div>
+<input type="file" id="bgPicker" accept="image/*" style="display:none">
+<input type="file" id="importPicker" accept=".txt,.json" style="display:none">
+
 <script>
     'use strict';
     let currentTabIndex = 0;
@@ -181,19 +187,10 @@
 
     const Utils = {
         getStorage(key, def) { 
-            try { 
-                const v = localStorage.getItem(key); 
-                return v ? JSON.parse(v) : def; 
-            } catch(e) { return def; } 
+            try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } 
         },
         setStorage(key, val) { 
-            try { 
-                localStorage.setItem(key, JSON.stringify(val)); 
-                return true; 
-            } catch(e) { 
-                alert("ブラウザの保存容量を超えました。背景画像を削除してください。");
-                return false; 
-            } 
+            try { localStorage.setItem(key, JSON.stringify(val)); return true; } catch(e) { alert("容量オーバーです。背景画像を削除してください。"); return false; } 
         },
         formatDate(d) { return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; },
         genId() { return Date.now() + Math.random().toString(36).substr(2, 6); }
@@ -205,12 +202,15 @@
         loadMemos();
         applyBgImage();
         setupEvents();
-        window.addEventListener('resize', adjustLayout);
-        setTimeout(adjustLayout, 200); // 起動時のレイアウト計算
+        setTimeout(adjustLayout, 200);
 
-        // サーバー実行時以外（file:///）はService Workerをスキップ
-        if (window.location.protocol !== 'file:' && 'serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js').catch(() => {});
+        // Service Workerの登録
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW registered'))
+                    .catch(err => console.error('SW registration failed', err));
+            });
         }
     }
 
@@ -220,7 +220,8 @@
         const input = document.getElementById('memoInput');
         input.oninput = function() { 
             this.style.height = 'auto'; 
-            this.style.height = this.scrollHeight + 'px'; 
+            this.style.height = this.scrollHeight + 'px';
+            if(this.value === "") this.style.height = 'auto';
         };
         
         const list = document.getElementById('memoList');
@@ -231,29 +232,27 @@
             list.insertBefore(draggedElement, after);
         });
         document.getElementById('searchInput').oninput = filterMemos;
+        window.addEventListener('resize', adjustLayout);
     }
 
-    // --- 背景管理（復元機能） ---
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     function triggerBgPicker() { closeModal('bgModal'); document.getElementById('bgPicker').click(); }
 
     function handleBgSelect(e) {
-        const file = e.target.files[0];
-        if (!file) return;
+        const file = e.target.files[0]; if (!file) return;
         const reader = new FileReader();
         reader.onload = (ev) => {
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                let w = img.width, h = img.height, max = 1280;
+                let w = img.width, h = img.height, max = 1200;
                 if (w > max || h > max) {
                     if (w > h) { h = (h * max) / w; w = max; } else { w = (w * max) / h; h = max; }
                 }
                 canvas.width = w; canvas.height = h;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, w, h);
-                const compressed = canvas.toDataURL('image/jpeg', 0.4); // 0.4圧縮採用
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                const compressed = canvas.toDataURL('image/jpeg', 0.5);
                 if (Utils.setStorage(`bg-v11-t${currentTabIndex}`, compressed)) { applyBgImage(); }
             };
             img.src = ev.target.result;
@@ -263,43 +262,38 @@
 
     function adjustBgOffset() {
         const current = localStorage.getItem(`off-v11-t${currentTabIndex}`) || "0";
-        const val = prompt("背景の上下位置を調整 (px単位):", current);
-        if (val !== null && !isNaN(val)) {
-            localStorage.setItem(`off-v11-t${currentTabIndex}`, val);
-            applyBgImage();
-        }
+        const val = prompt("背景位置調整 (px):", current);
+        if (val !== null && !isNaN(val)) { localStorage.setItem(`off-v11-t${currentTabIndex}`, val); applyBgImage(); }
     }
 
     function clearBg() {
-        if (confirm("このタブの背景設定を削除しますか？")) {
+        if (confirm("背景を削除しますか？")) {
             localStorage.removeItem(`bg-v11-t${currentTabIndex}`);
             localStorage.removeItem(`off-v11-t${currentTabIndex}`);
-            applyBgImage();
-            closeModal('bgModal');
+            applyBgImage(); closeModal('bgModal');
         }
     }
 
     function applyBgImage() {
         const d = Utils.getStorage(`bg-v11-t${currentTabIndex}`, null);
         const offset = localStorage.getItem(`off-v11-t${currentTabIndex}`) || "0";
-        const body = document.body;
-        if (d) {
-            body.style.backgroundImage = `url("${d}")`;
-            body.style.backgroundPosition = `center calc(50% + ${offset}px)`; // 位置調整を復元
-        } else {
-            body.style.backgroundImage = "none";
-        }
+        document.body.style.backgroundImage = d ? `url("${d}")` : "none";
+        document.body.style.backgroundPosition = `center calc(50% + ${offset}px)`;
     }
 
-    // --- メモ管理ロジック ---
     function loadMemos() {
-        const list = document.getElementById('memoList'); list.innerHTML = '';
+        const list = document.getElementById('memoList'); 
+        if (!list) return;
+        list.innerHTML = '';
         const data = Utils.getStorage(`memos-v11-t${currentTabIndex}`, []);
-        if (!data.length) { list.innerHTML = '<div style="text-align:center; padding:50px; color:#999;">メモがありません</div>'; return; }
-        data.forEach(m => renderMemo(m));
+        if (!data.length) { 
+            list.innerHTML = '<div style="text-align:center; padding:50px; color:#aaa;">記憶がありません</div>'; 
+            return; 
+        }
+        data.forEach(m => renderMemo(m, list));
     }
 
-    function renderMemo(m) {
+    function renderMemo(m, targetList) {
         const div = document.createElement('div');
         div.className = `memo-item ${isSortMode ? 'sort-mode' : ''}`;
         div.id = `m-${m.id}`; div.draggable = isSortMode;
@@ -308,15 +302,15 @@
             <span class="date-text">${m.date}</span>
             <div class="memo-body">${m.text.replace(/</g,'&lt;')}</div>
             <div class="memo-controls">
-                <button class="action-btn" onclick="copyText('${m.id}')">Copy</button>
-                <button class="action-btn" onclick="toggleEdit('${m.id}')">編集</button>
-                <button class="action-btn" style="color:red" onclick="deleteMemo('${m.id}')">消去</button>
+                <button class="action-btn btn-copy" onclick="copyText('${m.id}')">Copy</button>
+                <button class="action-btn btn-edit" onclick="toggleEdit('${m.id}')">編集</button>
+                <button class="action-btn btn-delete" onclick="deleteMemo('${m.id}')">消去</button>
             </div>`;
         if (isSortMode) {
             div.ondragstart = () => { draggedElement = div; div.classList.add('dragging'); };
             div.ondragend = () => { div.classList.remove('dragging'); draggedElement = null; saveOrder(); };
         }
-        document.getElementById('memoList').appendChild(div);
+        targetList.appendChild(div);
     }
 
     function addMemo() {
@@ -326,8 +320,7 @@
         const data = Utils.getStorage(`memos-v11-t${currentTabIndex}`, []);
         data.unshift({ id: Utils.genId(), text, date: Utils.formatDate(new Date()) });
         if (Utils.setStorage(`memos-v11-t${currentTabIndex}`, data)) { 
-            input.value = ''; 
-            input.style.height = 'auto'; 
+            input.value = ''; input.style.height = 'auto'; 
             loadMemos(); 
         }
     }
@@ -342,16 +335,13 @@
             el.classList.remove('editing'); body.contentEditable = false; btn.textContent = "編集";
             const data = Utils.getStorage(`memos-v11-t${currentTabIndex}`, []);
             const m = data.find(x => String(x.id) === String(id));
-            if (m) { 
-                m.text = body.innerText.trim(); 
-                Utils.setStorage(`memos-v11-t${currentTabIndex}`, data); 
-            }
+            if (m) { m.text = body.innerText.trim(); Utils.setStorage(`memos-v11-t${currentTabIndex}`, data); }
             loadMemos();
         }
     }
 
     function deleteMemo(id) {
-        if (!confirm('メモを削除しますか？')) return;
+        if (!confirm('削除しますか？')) return;
         let data = Utils.getStorage(`memos-v11-t${currentTabIndex}`, []);
         data = data.filter(m => String(m.id) !== String(id));
         Utils.setStorage(`memos-v11-t${currentTabIndex}`, data); loadMemos();
@@ -362,13 +352,15 @@
         const m = data.find(x => String(x.id) === String(id));
         if (m) {
             navigator.clipboard.writeText(m.text).then(() => { 
-                alert("コピーしました"); 
+                const btn = document.querySelector(`#m-${id} .btn-copy`);
+                const original = btn.textContent; btn.textContent = "OK!";
+                setTimeout(() => btn.textContent = original, 1000);
             });
         }
     }
 
-    // --- タブ・検索・エクスポート ---
     function toggleSortMode() { isSortMode = !isSortMode; loadMemos(); }
+    
     function saveOrder() {
         const ids = [...document.querySelectorAll('.memo-item')].map(el => el.id.replace('m-',''));
         const old = Utils.getStorage(`memos-v11-t${currentTabIndex}`, []);
@@ -381,10 +373,7 @@
         tabNames.forEach((name, i) => {
             const btn = document.createElement('div');
             btn.className = `tab ${i === currentTabIndex ? 'active' : ''}`; btn.textContent = name;
-            btn.onclick = () => { 
-                currentTabIndex = i; isSortMode = false; 
-                renderTabs(); applyBgImage(); loadMemos(); adjustLayout(); 
-            };
+            btn.onclick = () => { currentTabIndex = i; isSortMode = false; renderTabs(); applyBgImage(); loadMemos(); adjustLayout(); };
             btn.oncontextmenu = (e) => { e.preventDefault(); renameTab(i); };
             list.appendChild(btn);
         });
@@ -392,36 +381,31 @@
     }
 
     function renameTab(i) {
-        const n = prompt("新しいタブ名を入力してください:", tabNames[i]);
-        if (n && n.trim()) { 
-            tabNames[i] = n.trim(); 
-            Utils.setStorage('tab-names-v11', tabNames); 
-            renderTabs(); 
-        }
+        const n = prompt("名前を変更:", tabNames[i]);
+        if (n && n.trim()) { tabNames[i] = n.trim(); Utils.setStorage('tab-names-v11', tabNames); renderTabs(); }
     }
 
     function exportData() {
         const all = { version: "v11-full", tabs: tabNames, contents: {} };
         for(let i=0; i<6; i++) all.contents[`tab_${i}`] = Utils.getStorage(`memos-v11-t${i}`, []);
         const blob = new Blob([JSON.stringify(all, null, 2)], { type: 'text/plain' });
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `kioku_backup.txt`; a.click();
-        closeModal('dataModal');
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `backup.txt`; a.click();
     }
 
     function triggerImport() { closeModal('dataModal'); document.getElementById('importPicker').click(); }
+    
     function handleFileImport(e) {
         const f = e.target.files[0]; if (!f) return;
         const r = new FileReader();
         r.onload = (ev) => {
             try {
                 const d = JSON.parse(ev.target.result);
-                if (d.version === "v11-full" && confirm("全てのデータを上書きして復元しますか？")) {
-                    tabNames = d.tabs; 
+                if (d.version === "v11-full" && confirm("上書き復元しますか？")) {
                     Utils.setStorage('tab-names-v11', d.tabs);
                     for(let i=0; i<6; i++) Utils.setStorage(`memos-v11-t${i}`, d.contents[`tab_${i}`] || []);
                     location.reload();
                 }
-            } catch(e) { alert("無効なバックアップファイルです。"); }
+            } catch(e) { alert("無効なファイルです。"); }
         };
         r.readAsText(f);
     }
@@ -434,8 +418,11 @@
     }
 
     function adjustLayout() {
-        const h = document.getElementById('headerArea').offsetHeight;
-        document.body.style.paddingTop = (h + 10) + 'px'; // タブの段数に応じて動的に調整
+        const header = document.getElementById('headerArea');
+        if (header) {
+            const h = header.offsetHeight;
+            document.body.style.paddingTop = (h + 10) + 'px';
+        }
     }
 
     init();
