@@ -1,4 +1,4 @@
-const CACHE_NAME = 'check-app-v1';
+const CACHE_NAME = 'check-app-v2';
 const ASSETS = [
   './',
   './index.html',
