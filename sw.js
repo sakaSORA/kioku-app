@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kioku-v13-ghp';
+const CACHE_NAME = 'kioku-v1';
 const ASSETS = [
     './',
     './memo.html',
