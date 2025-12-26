@@ -1,10 +1,12 @@
 {
+  "name": "記憶の彼方 - Pastel Edition",
   "short_name": "記憶の彼方",
-  "name": "メモ！記憶の彼方",
+  "description": "楓ちゃんと歩む、ひらめきメモアプリ",
+  "start_url": "./index.html",
   "display": "standalone",
-  "start_url": "./memo.html",
-  "background_color": "#f0f0f2",
-  "theme_color": "#007AFF",
+  "orientation": "portrait",
+  "background_color": "#FFFBFA",
+  "theme_color": "#A3D8FF",
   "icons": [
     {
       "src": "./icon-192.png",
@@ -15,8 +17,7 @@
     {
       "src": "./icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }

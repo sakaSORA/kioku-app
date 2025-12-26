@@ -1,31 +1,26 @@
-const CACHE_NAME = 'kioku-v1';
-const ASSETS = [
-    './',
-    './memo.html',
-    './manifest.json',
-    './icon-192.png',
-    './icon-512.png'
+const CACHE_NAME = 'memo-app-v1';
+const ASSETS_TO_CACHE = [
+  './',
+  './index.html',
+  './manifest.json',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+  'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap'
 ];
 
+// インストール時にファイルをキャッシュ
 self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-    );
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS_TO_CACHE);
+    })
+  );
 });
 
-self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((keys) => {
-            return Promise.all(
-                keys.filter(key => key !== CACHE_NAME)
-                    .map(key => caches.delete(key))
-            );
-        })
-    );
-});
-
+// ネットワークファースト戦略（常に最新を試み、ダメならキャッシュ）
 self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request).then((res) => res || fetch(event.request))
-    );
+  event.respondWith(
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
+    })
+  );
 });
