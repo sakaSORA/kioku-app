@@ -42,27 +42,24 @@
 
         #main-scroll-area { position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px; }
 
-        /* メモアイテム: 透明度 0.4 の設定 */
         .memo-item { 
             display: flex; 
             align-items: center; 
             margin-bottom: 10px; 
             padding: 12px; 
             border-radius: 16px; 
-            background: rgba(255, 255, 255, 0.4) !important; /* 透過率 0.4 */
+            background: rgba(255, 255, 255, 0.4) !important; 
             box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
             backdrop-filter: none !important; 
             -webkit-backdrop-filter: none !important;
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
         
-        /* 文字の視認性を高める影の追加 */
         .memo-body { 
             flex: 1; font-size: 0.95rem; color: #111; margin: 0 12px; 
             white-space: pre-wrap; word-break: break-all; 
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; 
             font-weight: 700;
-            /* 文字の背景に薄い光彩を入れて読みやすくする */
             text-shadow: 0 0 8px rgba(255, 255, 255, 0.9), 0 0 4px rgba(255, 255, 255, 0.9);
         }
         .date-text { 
@@ -76,7 +73,6 @@
         #memoInput::-webkit-scrollbar { display: none; }
         .add-btn { background: var(--primary-color); color: white; border: none; padding: 0 24px; border-radius: 15px; font-weight: bold; font-size: 15px; }
 
-        /* モーダル */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .modal-content { background: white; width: 85%; max-width: 320px; border-radius: 24px; padding: 25px; text-align: center; }
         .modal-btn { width: 100%; margin-bottom: 10px; padding: 14px; border-radius: 15px; border: 1px solid #EEE; background: #F9F9F9; font-weight: bold; color: #555; cursor: pointer; }
@@ -211,7 +207,28 @@
     function handleBgSelect(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); let w = img.width, h = img.height, max = 1200; if (w > max || h > max) { if (w > h) { h = (h * max) / w; w = max; } else { w = (w * max) / h; h = max; } } canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h); const compressed = canvas.toDataURL('image/jpeg', 0.8); if (Utils.setStorage(`bg-v12-t${currentTabIndex}`, compressed)) { applyBgImage(); } }; img.src = ev.target.result; }; reader.readAsDataURL(file); }
     function clearBg() { localStorage.removeItem(`bg-v12-t${currentTabIndex}`); applyBgImage(); closeModal('bgModal'); }
     function adjustBgOffset() { const val = prompt("上下位置(px):", "0"); if (val !== null) { localStorage.setItem(`off-v12-t${currentTabIndex}`, val); applyBgImage(); } }
-    function exportData() { const all = { version: "v12-util", tabs: tabNames, contents: {} }; for(let i=0; i<6; i++) all.contents[`tab_${i}`] = Utils.getStorage(`memos-v12-t${i}`, []); const blob = new Blob([JSON.stringify(all, null, 2)], { type: 'text/plain;charset=utf-8' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `memo_backup.txt`; a.click(); }
+
+    /* --- 修正したバックアップ関数 --- */
+    function exportData() {
+        const all = { version: "v12-util", tabs: tabNames, contents: {} };
+        for(let i=0; i<6; i++) all.contents[`tab_${i}`] = Utils.getStorage(`memos-v12-t${i}`, []);
+        
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const date = now.getDate();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        
+        // ファイル名：【12.29_16時30分.txt】
+        const fileName = `${month}.${date}_${hours}時${minutes}分.txt`;
+
+        const blob = new Blob([JSON.stringify(all, null, 2)], { type: 'text/plain;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = fileName;
+        a.click();
+    }
+
     function handleFileImport(e) { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = (ev) => { try { const d = JSON.parse(ev.target.result); if (confirm("復元しますか？")) { Utils.setStorage('tab-names-v12', d.tabs || tabNames); for(let i=0; i<6; i++) Utils.setStorage(`memos-v12-t${i}`, d.contents ? d.contents[`tab_${i}`] : []); location.reload(); } } catch(e) { alert("不正なファイルです。"); } }; r.readAsText(f, 'UTF-8'); }
     function filterMemos() { const q = document.getElementById('searchInput').value.toLowerCase(); document.querySelectorAll('.memo-item').forEach(el => { el.style.display = el.innerText.toLowerCase().includes(q) ? 'flex' : 'none'; }); }
     init();
